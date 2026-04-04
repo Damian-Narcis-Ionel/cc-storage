@@ -4,14 +4,9 @@ if not CFG.monitors then
   error("Missing CFG.monitors in /sorter_config.lua")
 end
 
-local LABELS = {
-  stone  = "STONE",
-  wood   = "WOOD",
-  farm   = "FARM",
-  ores   = "ORES",
-  misc   = "MISC",
-  armory = "ARMORY",
-}
+if not CFG.categories or type(CFG.categories) ~= "table" then
+  error("Missing CFG.categories in /sorter_config.lua")
+end
 
 local function centerX(termObj, text)
   local w, _ = termObj.getSize()
@@ -36,9 +31,11 @@ local function drawLabel(monitorName, text)
   m.write(text)
 end
 
-drawLabel(CFG.monitors.stone,  LABELS.stone)
-drawLabel(CFG.monitors.wood,   LABELS.wood)
-drawLabel(CFG.monitors.farm,   LABELS.farm)
-drawLabel(CFG.monitors.ores,   LABELS.ores)
-drawLabel(CFG.monitors.misc,   LABELS.misc)
-drawLabel(CFG.monitors.armory, LABELS.armory)
+for _, category in ipairs(CFG.categories) do
+  if type(category) == "table" and category.key and category.label then
+    local monitorName = CFG.monitors[category.key]
+    if monitorName then
+      drawLabel(monitorName, string.upper(tostring(category.label)))
+    end
+  end
+end
