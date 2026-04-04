@@ -126,7 +126,7 @@ local function makeCategoryState(cfg)
     categories[#categories + 1] = {
       key = entry.key,
       label = (existing and existing.label) or entry.label,
-      desired = (existing and type(existing.chests) == "table" and #existing.chests) or entry.desired,
+      desired = (existing and type(existing.desired) == "number" and existing.desired) or entry.desired,
       chests = {},
     }
     seen[entry.key] = true
@@ -138,7 +138,8 @@ local function makeCategoryState(cfg)
         categories[#categories + 1] = {
           key = category.key,
           label = category.label or category.key,
-          desired = type(category.chests) == "table" and #category.chests or 0,
+          desired = type(category.desired) == "number" and category.desired
+            or (type(category.chests) == "table" and #category.chests or 0),
           chests = {},
         }
       end
@@ -264,9 +265,10 @@ local function writeConfigFile(state)
   lines[#lines + 1] = "  categories = {"
 
   for _, category in ipairs(state.categories) do
-    lines[#lines + 1] = ("    { key = %s, label = %s, chests = {"):format(
+    lines[#lines + 1] = ("    { key = %s, label = %s, desired = %d, chests = {"):format(
       quoteLua(category.key),
-      quoteLua(category.label)
+      quoteLua(category.label),
+      category.desired or 0
     )
     for _, chestName in ipairs(category.chests) do
       lines[#lines + 1] = "      " .. quoteLua(chestName) .. ","
