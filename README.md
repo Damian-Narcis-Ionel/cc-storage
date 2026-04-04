@@ -11,7 +11,8 @@ This project is built around a central sorter computer, multiple categorized sto
 - Dashboard monitor showing storage usage by category
 - Slot-based fullness tracking for more realistic storage pressure
 - Label monitors for category naming
-- Updater script for pulling the latest files from a remote source
+- Updater script for pulling the latest files from GitHub
+- Interactive setup script for remapping chests with monitor buttons
 - Easy to expand with new categories and storage lines
 
 ## Current Scripts
@@ -46,10 +47,15 @@ This defines:
 - labels used by the dashboard
 
 ### `updater.lua`
-Downloads updated script files from the configured remote source.
+Downloads updated script files from configured GitHub raw URLs.
 
 ### `updater_config.lua`
 Tells the updater which files to download and where to save them.
+
+### `setup_storage.lua`
+Interactive storage mapping tool.
+
+It uses the dashboard monitor for a clickable setup flow, can auto-load the current config, writes a backup of `sorter_config.lua`, and lets you assign chests category-by-category using monitor buttons.
 
 ## Why slot-based fullness?
 
@@ -68,10 +74,60 @@ Because of that, the dashboard uses:
 
 This gives a much more realistic picture of whether a category is close to jamming.
 
+## Updating In Game
+
+Bootstrap the updater on the CC computer:
+
+```lua
+wget https://raw.githubusercontent.com/Damian-Narcis-Ionel/cc-storage/main/updater.lua updater.lua
+wget https://raw.githubusercontent.com/Damian-Narcis-Ionel/cc-storage/main/updater_config.lua updater_config.lua
+```
+
+Then update everything:
+
+```lua
+updater all
+```
+
+This installs:
+- `labels.lua`
+- `setup_storage.lua`
+- `sorter.lua`
+- `sorter_config.lua`
+- `dashboard.lua`
+- `updater.lua`
+- `updater_config.lua`
+
+## Interactive Setup
+
+Run:
+
+```lua
+setup_storage
+```
+
+The setup script takes over the dashboard monitor for configuration.
+
+Workflow:
+- stop the dashboard first if it is running
+- choose the input chest
+- tap a category on the monitor
+- add or remove one temporary item in a chest from that category
+- tap `Find Marked`
+- repeat until that category has all of its chests
+- tap `Confirm Category`
+- tap `Save` when finished
+
+Important:
+- opening a chest is not enough for detection
+- the script identifies a chest by inventory content changes
+- before saving, the old config is backed up to `sorter_config.lua.bak`
+
 ## Repository Structure
 
 ```text
 labels.lua
+setup_storage.lua
 dashboard.lua
 sorter.lua
 sorter_config.lua
