@@ -465,27 +465,31 @@ local function addMarkedToActiveCategory()
     end
   end
 
-  if #changed == 1 then
-    local category = categoryByKey(state.activeCategoryKey)
-    local chestName = changed[1]
-    if not category then
-      setMessage("Active category is missing.")
-      return
-    end
+  if #changed == 0 then
+    setMessage("No changed chest found. Add or remove one temporary item, then try again.")
+    return
+  end
+
+  local category = categoryByKey(state.activeCategoryKey)
+  if not category then
+    setMessage("Active category is missing.")
+    return
+  end
+
+  table.sort(changed)
+
+  for _, chestName in ipairs(changed) do
     category.chests[#category.chests + 1] = chestName
     state.history[#state.history + 1] = {
       kind = "category",
       key = state.activeCategoryKey,
       chest = chestName,
     }
-    setMessage(("Added %s -> %s (%d/%d)"):format(chestName, category.label, #category.chests, category.desired))
-    state.currentIndex = 1
-    resetBaseline()
-  elseif #changed == 0 then
-    setMessage("No changed chest found. Add or remove one temporary item, then try again.")
-  else
-    setMessage("Multiple changed chests found. Reset baseline, then mark only one chest.")
   end
+
+  setMessage(("Added %d chest(s) -> %s (%d/%d)"):format(#changed, category.label, #category.chests, category.desired))
+  state.currentIndex = 1
+  resetBaseline()
 end
 
 local function assignCurrentAsInput()
@@ -610,7 +614,7 @@ local function render()
   drawButton(monitor, buttons, "mark", math.max(2, math.floor((w - 14) / 2)), h - 8, 14, 2, "Find Marked", colors.purple, colors.white)
   drawButton(monitor, buttons, "reset", math.max(2, math.floor((w - 14) / 2)), h - 11, 14, 2, "Reset Baseline", colors.gray, colors.black)
 
-  writeCentered(monitor, h, "Mark chest by changing 1 item, then tap Find Marked", colors.lightGray, colors.black)
+  writeCentered(monitor, h, "Change one or more chests, then tap Find Marked", colors.lightGray, colors.black)
 
   return buttons
 end
@@ -673,8 +677,8 @@ term.clear()
 term.setCursorPos(1, 1)
 print("Storage setup starting.")
 print("Stop the dashboard program first if it is currently using the same monitor.")
-print("Select a category, then add or remove one temporary item in each chest for that category.")
-print("Tap 'Find Marked' after each chest. Opening a chest is not enough; the script detects content changes.")
+print("Select a category, then add or remove one temporary item in one or more chests for that category.")
+print("Tap 'Find Marked' to add all changed chests at once. Opening a chest is not enough; the script detects content changes.")
 
 resetBaseline()
 
