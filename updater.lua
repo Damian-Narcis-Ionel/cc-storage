@@ -113,21 +113,6 @@ local function writeFile(path, text)
   file.close()
 end
 
-local function backupFile(path)
-  if not fs.exists(path) then
-    return false
-  end
-
-  local backup = path .. ".bak"
-
-  if fs.exists(backup) then
-    fs.delete(backup)
-  end
-
-  fs.copy(path, backup)
-  return true
-end
-
 local function installOrUpdateOne(name)
   local entry = PROGRAMS[name]
   if not entry then
@@ -168,7 +153,6 @@ local function installOrUpdateOne(name)
   writeFile(tempPath, text)
 
   if existed then
-    backupFile(targetPath)
     fs.delete(targetPath)
   end
 

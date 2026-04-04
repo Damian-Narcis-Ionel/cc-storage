@@ -1,5 +1,4 @@
 local CONFIG_PATH = "sorter_config.lua"
-local BACKUP_PATH = "sorter_config.lua.bak"
 
 local DEFAULT_CATEGORIES = {
   { key = "stone", label = "Stone", desired = 4 },
@@ -235,13 +234,6 @@ end
 local function writeConfigFile(state)
   if not state.inputName or state.inputName == "" then
     return nil, "Input chest is not assigned"
-  end
-
-  if fs.exists(CONFIG_PATH) then
-    if fs.exists(BACKUP_PATH) then
-      fs.delete(BACKUP_PATH)
-    end
-    fs.copy(CONFIG_PATH, BACKUP_PATH)
   end
 
   local lines = {}
@@ -654,7 +646,7 @@ local function handleButton(id)
     local ok, err = writeConfigFile(state)
     if ok then
       state.saved = true
-      setMessage("Saved sorter_config.lua and wrote backup sorter_config.lua.bak")
+      setMessage("Saved sorter_config.lua")
     else
       setMessage(err)
     end
