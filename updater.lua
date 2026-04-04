@@ -7,6 +7,7 @@ end
 
 local DISK_MOUNT = CFG.disk_mount or "disk"
 local PROGRAMS = CFG.programs or {}
+local GITHUB = CFG.github or {}
 
 local function sortedKeys(tbl)
   local keys = {}
@@ -54,23 +55,47 @@ local function ensureParentDir(path)
   end
 end
 
-local function downloadPaste(code)
+local function buildGitHubRawUrl(entry)
+  if type(entry.url) == "string" and entry.url ~= "" then
+    return entry.url
+  end
+
+  local owner = entry.owner or GITHUB.owner
+  local repo = entry.repo or GITHUB.repo
+  local branch = entry.branch or GITHUB.branch or "main"
+  local path = entry.path or entry.file
+
+  if type(owner) ~= "string" or owner == "" then
+    return nil, "Missing GitHub owner"
+  end
+
+  if type(repo) ~= "string" or repo == "" then
+    return nil, "Missing GitHub repo"
+  end
+
+  if type(path) ~= "string" or path == "" then
+    return nil, "Missing GitHub file path"
+  end
+
+  return ("https://raw.githubusercontent.com/%s/%s/%s/%s"):format(owner, repo, branch, path)
+end
+
+local function downloadUrl(url, label)
   if not http then
     error("HTTP API is not available.")
   end
 
-  local url = "https://pastebin.com/raw/" .. code
   local response, err = http.get(url)
 
   if not response then
-    error("Failed to download paste " .. code .. ": " .. tostring(err))
+    error("Failed to download " .. label .. ": " .. tostring(err))
   end
 
   local text = response.readAll()
   response.close()
 
   if not text or text == "" then
-    error("Paste " .. code .. " returned empty content.")
+    error("Downloaded empty content from " .. label .. ".")
   end
 
   return text
@@ -109,10 +134,6 @@ local function installOrUpdateOne(name)
     error("Unknown program: " .. name)
   end
 
-  if type(entry.code) ~= "string" or entry.code == "" then
-    error("Missing paste code for program: " .. name)
-  end
-
   local fileName = entry.file or (name .. ".lua")
   local targetPath = joinPath(DISK_MOUNT, fileName)
   local tempPath = targetPath .. ".new"
@@ -125,7 +146,20 @@ local function installOrUpdateOne(name)
     print("Installing " .. name .. " -> " .. targetPath)
   end
 
-  local text = downloadPaste(entry.code)
+  local downloadLabel
+  local text
+
+  local githubUrl, githubErr = buildGitHubRawUrl(entry)
+  if githubUrl then
+    downloadLabel = githubUrl
+    text = downloadUrl(githubUrl, githubUrl)
+  elseif type(entry.code) == "string" and entry.code ~= "" then
+    local pasteUrl = "https://pastebin.com/raw/" .. entry.code
+    downloadLabel = pasteUrl
+    text = downloadUrl(pasteUrl, pasteUrl)
+  else
+    error("Program '" .. name .. "' is missing a GitHub source and Pastebin code" .. (githubErr and (": " .. githubErr) or "."))
+  end
 
   if fs.exists(tempPath) then
     fs.delete(tempPath)
