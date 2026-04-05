@@ -75,33 +75,6 @@ local farmExact = {
   ["minecraft:water_bucket"] = true,
   ["minecraft:lava_bucket"] = true,
   ["minecraft:milk_bucket"] = true,
-
-  ["minecraft:rotten_flesh"] = true,
-  ["minecraft:bone"] = true,
-  ["minecraft:string"] = true,
-  ["minecraft:gunpowder"] = true,
-  ["minecraft:spider_eye"] = true,
-  ["minecraft:ender_pearl"] = true,
-  ["minecraft:feather"] = true,
-  ["minecraft:leather"] = true,
-  ["minecraft:slime_ball"] = true,
-
-  ["minecraft:porkchop"] = true,
-  ["minecraft:cooked_porkchop"] = true,
-  ["minecraft:beef"] = true,
-  ["minecraft:cooked_beef"] = true,
-  ["minecraft:chicken"] = true,
-  ["minecraft:cooked_chicken"] = true,
-  ["minecraft:mutton"] = true,
-  ["minecraft:cooked_mutton"] = true,
-  ["minecraft:rabbit"] = true,
-  ["minecraft:cooked_rabbit"] = true,
-  ["minecraft:cod"] = true,
-  ["minecraft:cooked_cod"] = true,
-  ["minecraft:salmon"] = true,
-  ["minecraft:cooked_salmon"] = true,
-  ["minecraft:tropical_fish"] = true,
-  ["minecraft:pufferfish"] = true,
 }
 
 local oreExact = {
@@ -124,6 +97,51 @@ local oreExact = {
   ["minecraft:ancient_debris"] = true,
 }
 
+local mobExact = {
+  ["minecraft:rotten_flesh"] = true,
+  ["minecraft:bone"] = true,
+  ["minecraft:string"] = true,
+  ["minecraft:gunpowder"] = true,
+  ["minecraft:spider_eye"] = true,
+  ["minecraft:ender_pearl"] = true,
+  ["minecraft:feather"] = true,
+  ["minecraft:leather"] = true,
+  ["minecraft:slime_ball"] = true,
+  ["minecraft:phantom_membrane"] = true,
+  ["minecraft:ghast_tear"] = true,
+  ["minecraft:magma_cream"] = true,
+  ["minecraft:blaze_rod"] = true,
+  ["minecraft:blaze_powder"] = true,
+  ["minecraft:prismarine_shard"] = true,
+  ["minecraft:prismarine_crystals"] = true,
+  ["minecraft:shulker_shell"] = true,
+  ["minecraft:ink_sac"] = true,
+  ["minecraft:glow_ink_sac"] = true,
+  ["minecraft:nautilus_shell"] = true,
+  ["minecraft:rabbit_hide"] = true,
+  ["minecraft:rabbit_foot"] = true,
+  ["minecraft:scute"] = true,
+  ["minecraft:armadillo_scute"] = true,
+  ["minecraft:turtle_scute"] = true,
+
+  ["minecraft:porkchop"] = true,
+  ["minecraft:cooked_porkchop"] = true,
+  ["minecraft:beef"] = true,
+  ["minecraft:cooked_beef"] = true,
+  ["minecraft:chicken"] = true,
+  ["minecraft:cooked_chicken"] = true,
+  ["minecraft:mutton"] = true,
+  ["minecraft:cooked_mutton"] = true,
+  ["minecraft:rabbit"] = true,
+  ["minecraft:cooked_rabbit"] = true,
+  ["minecraft:cod"] = true,
+  ["minecraft:cooked_cod"] = true,
+  ["minecraft:salmon"] = true,
+  ["minecraft:cooked_salmon"] = true,
+  ["minecraft:tropical_fish"] = true,
+  ["minecraft:pufferfish"] = true,
+}
+
 local function isArmory(name)
   return contains(name, "_pickaxe")
     or contains(name, "_axe")
@@ -142,6 +160,42 @@ local function isArmory(name)
     or contains(name, "arrow")
     or contains(name, "bundle")
     or contains(name, "horse_armor")
+end
+
+local function isFlowers(name)
+  if not contains(name, ":") then
+    return false
+  end
+
+  if contains(name, "flora") then
+    return true
+  end
+
+  return contains(name, "_flower")
+    or contains(name, "flowering_")
+    or contains(name, "flower")
+    or contains(name, "petals")
+    or contains(name, "grass")
+    or contains(name, "fern")
+    or contains(name, "bush")
+    or contains(name, "blossom")
+    or contains(name, "tulip")
+    or contains(name, "dandelion")
+    or contains(name, "poppy")
+    or contains(name, "orchid")
+    or contains(name, "allium")
+    or contains(name, "azure_bluet")
+    or contains(name, "oxeye_daisy")
+    or contains(name, "cornflower")
+    or contains(name, "lily_of_the_valley")
+    or contains(name, "wither_rose")
+    or contains(name, "sunflower")
+    or contains(name, "lilac")
+    or contains(name, "rose_bush")
+    or contains(name, "peony")
+    or contains(name, "pink_petals")
+    or contains(name, "spore_blossom")
+    or contains(name, "cactus_flower")
 end
 
 local function isFarm(name)
@@ -173,6 +227,17 @@ local function isFarm(name)
     or contains(name, "rabbit")
     or contains(name, "cod")
     or contains(name, "salmon")
+end
+
+local function isMobs(name)
+  if mobExact[name] then
+    return true
+  end
+
+  return contains(name, "spawn_egg")
+    or contains(name, "mob_head")
+    or contains(name, "_head")
+    or contains(name, "_horn")
 end
 
 local function isOre(name)
@@ -214,9 +279,20 @@ local function isWood(name)
     or contains(name, "crafting_table")
 end
 
+local function isBuilding(name)
+  return contains(name, "dirt")
+    or contains(name, "sand")
+    or contains(name, "terracotta")
+    or contains(name, "wool")
+    or contains(name, "glass")
+    or contains(name, "hay_block")
+    or contains(name, "waxed_")
+    or contains(name, "_candle")
+    or contains(name, "honeycomb_block")
+end
+
 local function isStone(name)
   return contains(name, "cobble")
-    or contains(name, "terracotta")
     or contains(name, "deepslate")
     or contains(name, "blackstone")
     or contains(name, "andesite")
@@ -234,6 +310,14 @@ local function classify(name)
     return "armory"
   end
 
+  if TARGETS.flowers and isFlowers(name) then
+    return "flowers"
+  end
+
+  if TARGETS.mobs and isMobs(name) then
+    return "mobs"
+  end
+
   if isFarm(name) then
     return "farm"
   end
@@ -244,6 +328,10 @@ local function classify(name)
 
   if isWood(name) then
     return "wood"
+  end
+
+  if TARGETS.building and isBuilding(name) then
+    return "building"
   end
 
   if isStone(name) then
