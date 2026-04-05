@@ -22,11 +22,6 @@ return {
       path = "sorter.lua",
     },
 
-    sorter_config = {
-      file = "sorter_config.lua",
-      path = "sorter_config.lua",
-    },
-
     dashboard = {
       file = "dashboard.lua",
       path = "dashboard.lua",
@@ -36,10 +31,20 @@ return {
       file = "updater.lua",
       path = "updater.lua",
     },
+  },
 
+  configs = {
     updater_config = {
       file = "updater_config.lua",
       path = "updater_config.lua",
+      target = "/updater_config.lua",
+    },
+
+    sorter_config = {
+      file = "sorter_config.lua",
+      path = "sorter_config.lua",
+      target = "/sorter_config.lua",
+      preserve_existing = true,
     },
   }
 }

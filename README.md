@@ -57,6 +57,19 @@ Interactive storage mapping tool.
 
 It uses the dashboard monitor for a clickable setup flow, can auto-load the current config, and lets you assign chests category-by-category using monitor buttons.
 
+## Install Layout
+
+Programs are intended to live on the floppy disk mount, usually `disk/`.
+
+Config files are intended to live on the computer itself:
+- `/sorter_config.lua`
+- `/updater_config.lua`
+
+This means:
+- the updater installs programs to the disk
+- the setup script writes the live sorter config to `/sorter_config.lua`
+- the runtime programs load config from `/sorter_config.lua`
+
 ## Why slot-based fullness?
 
 A category can look "low" on item count while actually being close to full if many slots are occupied by low-stack or unstackable items.
@@ -93,10 +106,14 @@ This installs:
 - `labels.lua`
 - `setup_storage.lua`
 - `sorter.lua`
-- `sorter_config.lua`
 - `dashboard.lua`
 - `updater.lua`
 - `updater_config.lua`
+
+Notes:
+- `updater_config.lua` is stored on the computer at `/updater_config.lua`
+- `sorter_config.lua` is stored on the computer at `/sorter_config.lua`
+- `update all` will not overwrite an existing `/sorter_config.lua`
 
 ## Interactive Setup
 

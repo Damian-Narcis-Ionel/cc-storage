@@ -1,4 +1,4 @@
-local CONFIG_PATH = "sorter_config.lua"
+local CONFIG_PATH = "/sorter_config.lua"
 
 local DEFAULT_CATEGORIES = {
   { key = "stone", label = "Stone", desired = 4 },

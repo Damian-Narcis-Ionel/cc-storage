@@ -1,12 +1,13 @@
 local args = { ... }
 
-local ok, CFG = pcall(dofile, "updater_config.lua")
+local ok, CFG = pcall(dofile, "/updater_config.lua")
 if not ok then
-  error("Could not load updater_config.lua: " .. tostring(CFG))
+  error("Could not load /updater_config.lua: " .. tostring(CFG))
 end
 
 local DISK_MOUNT = CFG.disk_mount or "disk"
 local PROGRAMS = CFG.programs or {}
+local CONFIGS = CFG.configs or {}
 local GITHUB = CFG.github or {}
 
 local function sortedKeys(tbl)
@@ -20,13 +21,21 @@ end
 
 local function usage()
   print("Usage:")
-  print("  update <program>")
+  print("  update <target>")
   print("  update all")
   print("")
   print("Available programs:")
   for _, name in ipairs(sortedKeys(PROGRAMS)) do
     local entry = PROGRAMS[name]
     print("  " .. name .. " -> " .. DISK_MOUNT .. "/" .. (entry.file or (name .. ".lua")))
+  end
+  if next(CONFIGS) then
+    print("")
+    print("Available configs:")
+    for _, name in ipairs(sortedKeys(CONFIGS)) do
+      local entry = CONFIGS[name]
+      print("  " .. name .. " -> " .. (entry.target or ("/" .. (entry.file or (name .. ".lua")))))
+    end
   end
 end
 
@@ -165,20 +174,91 @@ local function installOrUpdateOne(name)
   end
 end
 
-ensureDiskMounted()
+local function installOrUpdateConfig(name)
+  local entry = CONFIGS[name]
+  if not entry then
+    error("Unknown config: " .. name)
+  end
+
+  local targetPath = entry.target or ("/" .. (entry.file or (name .. ".lua")))
+  local tempPath = targetPath .. ".new"
+  local preserve = entry.preserve_existing == true
+  local existed = fs.exists(targetPath)
+
+  if preserve and existed then
+    print("Keeping existing " .. name .. " -> " .. targetPath)
+    return
+  end
+
+  if existed then
+    print("Updating " .. name .. " -> " .. targetPath)
+  else
+    print("Installing " .. name .. " -> " .. targetPath)
+  end
+
+  local githubUrl, githubErr = buildGitHubRawUrl(entry)
+  local text
+  if githubUrl then
+    text = downloadUrl(githubUrl, githubUrl)
+  elseif type(entry.code) == "string" and entry.code ~= "" then
+    local pasteUrl = "https://pastebin.com/raw/" .. entry.code
+    text = downloadUrl(pasteUrl, pasteUrl)
+  else
+    error("Config '" .. name .. "' is missing a GitHub source and Pastebin code" .. (githubErr and (": " .. githubErr) or "."))
+  end
+
+  if fs.exists(tempPath) then
+    fs.delete(tempPath)
+  end
+
+  writeFile(tempPath, text)
+
+  if existed then
+    fs.delete(targetPath)
+  end
+
+  fs.move(tempPath, targetPath)
+
+  if existed then
+    print("Updated " .. name)
+  else
+    print("Installed " .. name)
+  end
+end
 
 local targets = {}
 
 if #args == 1 and args[1] == "all" then
   targets = sortedKeys(PROGRAMS)
+  for _, name in ipairs(sortedKeys(CONFIGS)) do
+    targets[#targets + 1] = name
+  end
 else
   for i = 1, #args do
     targets[#targets + 1] = args[i]
   end
 end
 
+local needsDisk = false
 for i = 1, #targets do
-  installOrUpdateOne(targets[i])
+  if PROGRAMS[targets[i]] then
+    needsDisk = true
+    break
+  end
+end
+
+if needsDisk then
+  ensureDiskMounted()
+end
+
+for i = 1, #targets do
+  if PROGRAMS[targets[i]] then
+    installOrUpdateOne(targets[i])
+  elseif CONFIGS[targets[i]] then
+    installOrUpdateConfig(targets[i])
+  else
+    error("Unknown install target: " .. tostring(targets[i]))
+  end
 end
 
 print("")
