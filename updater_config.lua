@@ -21,6 +21,18 @@ return {
   },
 
   apps = {
+    mining = {
+      label = "Mining Turtles",
+      disk_dir = "apps/mining",
+
+      programs = {
+        hole = {
+          file = "hole.lua",
+          path = "apps/mining/hole.lua",
+        },
+      },
+    },
+
     storage = {
       label = "Storage System",
       disk_dir = "apps/storage",

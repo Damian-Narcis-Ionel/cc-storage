@@ -8,6 +8,9 @@ The repo is no longer structured as a storage-only project. Storage is now one a
 
 ```text
 apps/
+  mining/
+    README.md
+    hole.lua
   storage/
     README.md
     dashboard.lua
@@ -77,9 +80,11 @@ Each app gets:
 
 ## Current Apps
 
+- `mining`: turtle excavation utilities
 - `storage`: categorized chest storage, dashboard, labels, and setup flow
 
 Storage-specific details live in [apps/storage/README.md](apps/storage/README.md).
+Mining-specific details live in [apps/mining/README.md](apps/mining/README.md).
 
 ## Repo Rename
 
