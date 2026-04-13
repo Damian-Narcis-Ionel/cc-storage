@@ -291,6 +291,14 @@ local function isBuilding(name)
     or contains(name, "honeycomb_block")
 end
 
+local function isDem(name)
+  return string.match(name, "^computercraft:")
+    or string.match(name, "^advancedperipherals:")
+    or string.match(name, "^classicperipherals:")
+    or string.match(name, "^peripherals:")
+    or string.match(name, "^mekanism:")
+end
+
 local function isStone(name)
   return contains(name, "cobble")
     or contains(name, "deepslate")
@@ -306,6 +314,10 @@ local function isStone(name)
 end
 
 local function classify(name)
+  if TARGETS.dem and isDem(name) then
+    return "dem"
+  end
+
   if isArmory(name) then
     return "armory"
   end

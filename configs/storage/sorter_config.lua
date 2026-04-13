@@ -1,66 +1,31 @@
 -- sorter_config.lua
+local function chest(id)
+  return ("minecraft:chest_%d"):format(id)
+end
+
 local chests = {
-  input = "minecraft:chest_11",
-
-  stone_top    = "minecraft:chest_17",
-  stone_mid    = "minecraft:chest_16",
-  stone_bottom = "minecraft:chest_6",
-
-  wood_top     = "minecraft:chest_18",
-  wood_mid     = "minecraft:chest_19",
-  wood_bottom  = "minecraft:chest_15",
-
-  farm_top     = "minecraft:chest_20",
-  farm_mid     = "minecraft:chest_21",
-  farm_bottom  = "minecraft:chest_14",
-
-  ores_top     = "minecraft:chest_22",
-  ores_mid     = "minecraft:chest_23",
-  ores_bottom  = "minecraft:chest_13",
-
-  misc_top     = "minecraft:chest_24",
-  misc_mid     = "minecraft:chest_25",
-  misc_bottom  = "minecraft:chest_12",
-
-  armory_top    = "minecraft:chest_26",
-  armory_mid    = "minecraft:chest_27",
-  armory_bottom = "minecraft:chest_28",
-
-  flowers_1 = "minecraft:chest_48",
-  flowers_2 = "minecraft:chest_30",
-  flowers_3 = "minecraft:chest_34",
-  flowers_4 = "minecraft:chest_33",
-
-  building_1 = "minecraft:chest_45",
-  building_2 = "minecraft:chest_29",
-  building_3 = "minecraft:chest_31",
-  building_4 = "minecraft:chest_32",
-
-  mobs_1 = "minecraft:chest_46",
-  mobs_2 = "minecraft:chest_37",
-  mobs_3 = "minecraft:chest_36",
-  mobs_4 = "minecraft:chest_35",
-
-  blocks_1 = "minecraft:chest_47",
-  blocks_2 = "minecraft:chest_40",
-  blocks_3 = "minecraft:chest_39",
-  blocks_4 = "minecraft:chest_38",
+  input = chest(79),
 }
 
-monitors = {
+local monitors = {
   dashboards = {
-    "monitor_1",
+    "monitor_0",
     "monitor_12",
   },
 
-  dashboard = "monitor_1",
+  dashboard = "monitor_0",
 
-  stone = "monitor_2",
-  wood  = "monitor_7",
-  farm  = "monitor_8",
-  ores  = "monitor_9",
-  misc  = "monitor_10",
+  stone = "monitor_6",
+  wood = "monitor_7",
+  farm = "monitor_8",
+  ores = "monitor_9",
+  mobs = "monitor_10",
   armory = "monitor_11",
+  building = "monitor_5",
+  blocks = "monitor_4",
+  flowers = "monitor_3",
+  misc = "monitor_2",
+  dem = "monitor_1",
 }
 
 return {
@@ -68,39 +33,48 @@ return {
   monitors = monitors,
 
   categories = {
-    { key = "stone", label = "Stone", chests = {
-      chests.stone_top, chests.stone_mid, chests.stone_bottom
+    { key = "stone", label = "Stone", desired = 7, chests = {
+      chest(4), chest(3), chest(5), chest(6), chest(7), chest(9), chest(8)
     }},
 
-    { key = "wood", label = "Wood", chests = {
-      chests.wood_top, chests.wood_mid, chests.wood_bottom
+    { key = "wood", label = "Wood", desired = 7, chests = {
+      chest(16), chest(15), chest(14), chest(13), chest(12), chest(11), chest(10)
     }},
 
-    { key = "farm", label = "Farm", chests = {
-      chests.farm_top, chests.farm_mid, chests.farm_bottom
+    { key = "farm", label = "Farm", desired = 7, chests = {
+      chest(17), chest(18), chest(20), chest(19), chest(21), chest(23), chest(22)
     }},
 
-    { key = "ores", label = "Ores", chests = {
-      chests.ores_top, chests.ores_mid, chests.ores_bottom
+    { key = "ores", label = "Ores", desired = 7, chests = {
+      chest(24), chest(25), chest(26), chest(27), chest(28), chest(29), chest(30)
     }},
 
-    { key = "misc", label = "Misc", chests = {
-      chests.misc_top, chests.misc_mid, chests.misc_bottom
+    { key = "mobs", label = "Mob", desired = 7, chests = {
+      chest(31), chest(32), chest(33), chest(34), chest(35), chest(36), chest(37)
     }},
-    { key = "armory", label = "Armory", chests = {
-      chests.armory_top, chests.armory_mid, chests.armory_bottom
+
+    { key = "armory", label = "Armory", desired = 7, chests = {
+      chest(38), chest(39), chest(40), chest(41), chest(42), chest(43), chest(44)
     }},
-    { key = "flowers", label = "Flowers", chests = {
-      chests.flowers_1, chests.flowers_2, chests.flowers_3, chests.flowers_4
+
+    { key = "building", label = "Building", desired = 7, chests = {
+      chest(45), chest(46), chest(47), chest(48), chest(49), chest(50), chest(51)
     }},
-    { key = "building", label = "Building", chests = {
-      chests.building_1, chests.building_2, chests.building_3, chests.building_4
+
+    { key = "blocks", label = "Blocks", desired = 7, chests = {
+      chest(52), chest(53), chest(54), chest(55), chest(56), chest(57), chest(58)
     }},
-    { key = "mobs", label = "Mobs", chests = {
-      chests.mobs_1, chests.mobs_2, chests.mobs_3, chests.mobs_4
+
+    { key = "flowers", label = "Flowers", desired = 7, chests = {
+      chest(59), chest(60), chest(61), chest(62), chest(63), chest(64), chest(65)
     }},
-    { key = "blocks", label = "Blocks", chests = {
-      chests.blocks_1, chests.blocks_2, chests.blocks_3, chests.blocks_4
+
+    { key = "misc", label = "Misc", desired = 7, chests = {
+      chest(71), chest(2), chest(70), chest(69), chest(68), chest(67), chest(66)
+    }},
+
+    { key = "dem", label = "Dem", desired = 7, chests = {
+      chest(72), chest(73), chest(74), chest(75), chest(76), chest(77), chest(78)
     }},
   }
 }
