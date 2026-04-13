@@ -81,14 +81,13 @@ Workflow:
 - tap a category on the dashboard monitor
 - tap `Next Label` until the desired top monitor name is shown
 - tap `Set Label`
-- add or remove one temporary item in one or more chests from that category
-- tap `Find Marked`
+- activate the modems for the chests in that category bank
+- the selected category count updates live as new inventories are detected
 - tap `Confirm Category`
 - tap `Save` when finished
 
 Important:
-- opening a chest is not enough for detection
-- the script identifies a chest by inventory content changes
+- setup can capture newly connected inventory peripherals live while a category is selected
 - labels only render for categories with assigned monitor mappings
 - label assignment no longer depends on monitor touch support, so normal and advanced monitors can be mixed
 - with two dashboard monitors, the left screen shows page 1 and the right screen shows page 2, then navigation advances as page pairs

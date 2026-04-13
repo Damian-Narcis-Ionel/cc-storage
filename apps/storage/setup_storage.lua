@@ -391,12 +391,24 @@ end
 local existingConfig = loadExistingConfig()
 local dashboardMonitorName, detectedDashboardMonitors = detectDashboardMonitors(existingConfig)
 local monitor = peripheral.wrap(dashboardMonitorName)
-local allInventories = collectInventories()
-local allMonitors = collectMonitors()
+local allInventories = {}
+local allMonitors = {}
 local inventorySet = {}
-for _, name in ipairs(allInventories) do
-  inventorySet[name] = true
+
+local function refreshInventories()
+  allInventories = collectInventories()
+  inventorySet = {}
+  for _, name in ipairs(allInventories) do
+    inventorySet[name] = true
+  end
 end
+
+local function refreshMonitors()
+  allMonitors = collectMonitors()
+end
+
+refreshInventories()
+refreshMonitors()
 
 local state = {
   monitorName = dashboardMonitorName,
@@ -452,7 +464,7 @@ if existingConfig and type(existingConfig.categories) == "table" then
     local target = byKey[category.key]
     if target and type(category.chests) == "table" then
       for _, chestName in ipairs(category.chests) do
-        if inventorySet[chestName] and chestName ~= state.inputName and not contains(target.chests, chestName) then
+        if chestName ~= state.inputName and not contains(target.chests, chestName) then
           target.chests[#target.chests + 1] = chestName
         end
       end
@@ -646,6 +658,51 @@ local function assignCurrentToCategory(categoryKey)
   }
   setMessage(("Assigned %s -> %s"):format(name, category.label))
   resetBaseline()
+end
+
+local function categoryForChest(chestName)
+  for _, category in ipairs(state.categories) do
+    if contains(category.chests, chestName) then
+      return category
+    end
+  end
+  return nil
+end
+
+local function captureInventoryToActiveCategory(name)
+  if state.mode ~= "assign" or not state.activeCategoryKey then
+    return false
+  end
+
+  if name == state.inputName then
+    setMessage("Input chest was detected again: " .. name)
+    return true
+  end
+
+  local activeCategory = categoryByKey(state.activeCategoryKey)
+  if not activeCategory then
+    setMessage("Active category is missing.")
+    return true
+  end
+
+  local existingCategory = categoryForChest(name)
+  if existingCategory then
+    if existingCategory.key == activeCategory.key then
+      setMessage(("Detected %s again for %s."):format(name, activeCategory.label))
+    else
+      setMessage(("Detected %s but it is already assigned to %s."):format(name, existingCategory.label))
+    end
+    return true
+  end
+
+  activeCategory.chests[#activeCategory.chests + 1] = name
+  state.history[#state.history + 1] = {
+    kind = "category",
+    key = state.activeCategoryKey,
+    chest = name,
+  }
+  setMessage(("Captured %s -> %s (%d/%d)"):format(name, activeCategory.label, #activeCategory.chests, activeCategory.desired))
+  return true
 end
 
 local function addMarkedToActiveCategory()
@@ -1009,8 +1066,12 @@ local function render()
   local footer
   if state.pendingDashboardIndex then
     footer = "Touch dashboard 2 or tap Set Dash 2 again"
+  elseif state.mode == "assign" and state.activeCategoryKey then
+    footer = "Select category, then activate chest modems for that bank"
+  elseif state.mode == "input" then
+    footer = "Choose the input chest to begin"
   else
-    footer = "Change chests, then tap Find Marked"
+    footer = "Select a category to start capturing chests"
   end
   writeCentered(monitor, h, clip(footer, w), colors.lightGray, colors.black)
 
@@ -1092,7 +1153,7 @@ local function handleButton(id)
     state.pendingMonitorCategoryKey = nil
     state.activeCategoryKey = string.sub(id, 5)
     local category = categoryByKey(state.activeCategoryKey)
-    setMessage(("Selected category: %s. Mark chests and tap Find Marked."):format(category.label))
+    setMessage(("Selected category: %s. Activate modems for that bank."):format(category.label))
   end
 end
 
@@ -1101,8 +1162,8 @@ term.setCursorPos(1, 1)
 print("Storage setup starting.")
 print("Stop the dashboard program first if it is currently using the same monitor.")
 print("Tip: run setup_storage <monitor_name> to force the setup monitor.")
-print("Select a category, then add or remove one temporary item in one or more chests for that category.")
-print("Tap 'Find Marked' to add all changed chests at once. Opening a chest is not enough; the script detects content changes.")
+print("Select a category, then activate the modems for the chests in that bank.")
+print("Newly detected inventories are added live to the selected category.")
 
 resetBaseline()
 
@@ -1135,6 +1196,20 @@ while true do
         handleButton(id)
       end
     end
+  elseif event == "peripheral" then
+    local name = p1
+    local wasKnownInventory = inventorySet[name] == true
+    refreshInventories()
+    refreshMonitors()
+
+    if not wasKnownInventory and isInventory(name) and not state.pendingDashboardIndex and not state.pendingMonitorCategoryKey then
+      captureInventoryToActiveCategory(name)
+    end
+    break
+  elseif event == "peripheral_detach" then
+    refreshInventories()
+    refreshMonitors()
+    break
   elseif event == "key" and p1 == keys.q then
     monitor.setBackgroundColor(colors.black)
     monitor.clear()
