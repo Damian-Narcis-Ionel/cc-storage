@@ -406,6 +406,7 @@ local state = {
   inputName = nil,
   mode = "input",
   currentIndex = 1,
+  labelMonitorIndex = 1,
   categoryPage = 1,
   activeCategoryKey = nil,
   pendingDashboardIndex = nil,
@@ -498,6 +499,41 @@ local function isDashboardMonitorName(name)
     end
   end
   return false
+end
+
+local function getAssignableLabelMonitors()
+  local out = {}
+  for _, name in ipairs(allMonitors) do
+    if not isDashboardMonitorName(name) then
+      out[#out + 1] = name
+    end
+  end
+  return out
+end
+
+local function currentLabelMonitorCandidate()
+  local choices = getAssignableLabelMonitors()
+  if #choices == 0 then
+    state.labelMonitorIndex = 1
+    return nil, choices
+  end
+
+  if state.labelMonitorIndex < 1 or state.labelMonitorIndex > #choices then
+    state.labelMonitorIndex = 1
+  end
+
+  return choices[state.labelMonitorIndex], choices
+end
+
+local function cycleLabelMonitorCandidate()
+  local choices = getAssignableLabelMonitors()
+  if #choices == 0 then
+    setMessage("No label monitor available.")
+    return
+  end
+
+  state.labelMonitorIndex = (state.labelMonitorIndex % #choices) + 1
+  setMessage("Label monitor picker: " .. choices[state.labelMonitorIndex])
 end
 
 local function assignedSet()
@@ -728,6 +764,34 @@ local function beginMonitorAssignment()
   setMessage(("Touch the label monitor for %s."):format(category.label))
 end
 
+local function assignCurrentLabelMonitor()
+  if not state.activeCategoryKey then
+    setMessage("Select a category first.")
+    return
+  end
+
+  local monitorName = currentLabelMonitorCandidate()
+  if not monitorName then
+    setMessage("No label monitor available.")
+    return
+  end
+
+  local category = categoryByKey(state.activeCategoryKey)
+  if not category then
+    setMessage("Selected category is missing.")
+    return
+  end
+
+  local usedBy = categoryForMonitor(monitorName)
+  if usedBy and usedBy.key ~= state.activeCategoryKey then
+    setMessage(("Monitor already used by %s."):format(usedBy.label))
+    return
+  end
+
+  state.monitors[state.activeCategoryKey] = monitorName
+  setMessage(("Assigned label monitor %s -> %s"):format(monitorName, category.label))
+end
+
 local function beginSecondaryDashboardAssignment()
   if #allMonitors <= #state.dashboardMonitors then
     setMessage("No extra monitor found for dashboard 2.")
@@ -739,9 +803,14 @@ local function beginSecondaryDashboardAssignment()
   setMessage("Touch the second dashboard monitor.")
 end
 
+local function cancelPendingAssignments()
+  state.pendingDashboardIndex = nil
+  state.pendingMonitorCategoryKey = nil
+end
+
 local function clearSecondaryDashboard()
   state.dashboardMonitors[2] = nil
-  state.pendingDashboardIndex = nil
+  cancelPendingAssignments()
   syncDashboardMonitors()
   setMessage("Cleared dashboard 2.")
 end
@@ -752,23 +821,26 @@ local function assignPendingDashboard(monitorName)
   end
 
   if monitorName == state.monitorName then
+    cancelPendingAssignments()
     setMessage("Touch the second dashboard monitor, not the setup monitor.")
     return true
   end
 
   if not isMonitor(monitorName) then
+    cancelPendingAssignments()
     setMessage("Touched peripheral is not a monitor.")
     return true
   end
 
   local category = categoryForMonitor(monitorName)
   if category then
+    cancelPendingAssignments()
     setMessage(("Monitor already used as label for %s."):format(category.label))
     return true
   end
 
   state.dashboardMonitors[2] = monitorName
-  state.pendingDashboardIndex = nil
+  cancelPendingAssignments()
   syncDashboardMonitors()
   setMessage(("Assigned dashboard 2: %s"):format(monitorName))
   return true
@@ -882,12 +954,12 @@ local function render()
     if activeCategory then
       local selectedText = ("Selected: %s (%d/%d)"):format(activeCategory.label, #activeCategory.chests, activeCategory.desired)
       writeCentered(monitor, 7, clip(selectedText, w), colors.lime, colors.black)
-      local monitorText = "Label monitor: " .. monitorLabelForCategory(activeCategory.key)
-      local monitorColor = state.pendingMonitorCategoryKey == activeCategory.key and colors.cyan or colors.gray
-      writeCentered(monitor, 8, clip(monitorText, w), monitorColor, colors.black)
+      local pickedMonitor = currentLabelMonitorCandidate() or "none"
+      local monitorText = ("Label: %s | Pick: %s"):format(monitorLabelForCategory(activeCategory.key), pickedMonitor)
+      writeCentered(monitor, 8, clip(monitorText, w), colors.gray, colors.black)
     else
       writeCentered(monitor, 7, "Selected: none", colors.yellow, colors.black)
-      writeCentered(monitor, 8, "Label monitor: none", colors.gray, colors.black)
+      writeCentered(monitor, 8, ("Label pick: %s"):format(currentLabelMonitorCandidate() or "none"), colors.gray, colors.black)
     end
 
     for i = pageStart, math.min(#state.categories, pageStart + pageSize - 1) do
@@ -909,9 +981,10 @@ local function render()
     end
 
     drawButton(monitor, buttons, "assign_dashboard_2", 2, h - 17, 14, 2, "Set Dash 2", colors.cyan, colors.black)
+    drawButton(monitor, buttons, "cycle_label_monitor", math.max(2, math.floor((w - 16) / 2)), h - 17, 16, 2, "Next Label", colors.blue, colors.white)
     drawButton(monitor, buttons, "clear_dashboard_2", w - 13, h - 17, 12, 2, "Clear Dash2", colors.gray, colors.black)
     drawButton(monitor, buttons, "clear_category", 2, h - 8, 14, 2, "Clear Chests", colors.red, colors.white)
-    drawButton(monitor, buttons, "assign_monitor", math.max(2, math.floor((w - 16) / 2)), h - 8, 16, 2, "Assign Label", colors.cyan, colors.black)
+    drawButton(monitor, buttons, "assign_monitor", math.max(2, math.floor((w - 16) / 2)), h - 8, 16, 2, "Set Label", colors.cyan, colors.black)
     drawButton(monitor, buttons, "clear_monitor", w - 13, h - 8, 12, 2, "Clear Label", colors.gray, colors.black)
     drawButton(monitor, buttons, "confirm_category", math.max(2, math.floor((w - 20) / 2)), h - 2, 20, 2, "Confirm Category", colors.green, colors.black)
     drawButton(monitor, buttons, "undo", 2, h - 2, 8, 2, "Undo", colors.orange, colors.black)
@@ -928,9 +1001,7 @@ local function render()
 
   local footer
   if state.pendingDashboardIndex then
-    footer = "Touch the second dashboard monitor"
-  elseif state.pendingMonitorCategoryKey then
-    footer = "Touch a label monitor to assign it"
+    footer = "Touch dashboard 2 or tap Set Dash 2 again"
   else
     footer = "Change chests, then tap Find Marked"
   end
@@ -981,11 +1052,18 @@ local function handleButton(id)
   elseif id == "clear_category" then
     clearActiveCategory()
   elseif id == "assign_dashboard_2" then
-    beginSecondaryDashboardAssignment()
+    if state.pendingDashboardIndex then
+      cancelPendingAssignments()
+      setMessage("Canceled dashboard 2 assignment.")
+    else
+      beginSecondaryDashboardAssignment()
+    end
+  elseif id == "cycle_label_monitor" then
+    cycleLabelMonitorCandidate()
   elseif id == "clear_dashboard_2" then
     clearSecondaryDashboard()
   elseif id == "assign_monitor" then
-    beginMonitorAssignment()
+    assignCurrentLabelMonitor()
   elseif id == "clear_monitor" then
     clearActiveCategoryMonitor()
   elseif id == "confirm_category" then

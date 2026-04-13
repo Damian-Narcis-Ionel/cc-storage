@@ -79,9 +79,10 @@ Workflow:
 - choose the input chest
 - tap `Set Dash 2`, then touch the second big dashboard monitor if you are using one
 - tap a category on the dashboard monitor
+- tap `Next Label` until the desired top monitor name is shown
+- tap `Set Label`
 - add or remove one temporary item in one or more chests from that category
 - tap `Find Marked`
-- tap `Assign Label`, then touch the small monitor for that category
 - tap `Confirm Category`
 - tap `Save` when finished
 
@@ -89,4 +90,5 @@ Important:
 - opening a chest is not enough for detection
 - the script identifies a chest by inventory content changes
 - labels only render for categories with assigned monitor mappings
+- label assignment no longer depends on monitor touch support, so normal and advanced monitors can be mixed
 - with two dashboard monitors, the left screen shows page 1 and the right screen shows page 2, then navigation advances as page pairs
