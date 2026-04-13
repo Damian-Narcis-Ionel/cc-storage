@@ -407,6 +407,26 @@ local function refreshMonitors()
   allMonitors = collectMonitors()
 end
 
+local function scanForNewInventories()
+  local names = collectInventories()
+  local out = {}
+
+  for _, name in ipairs(names) do
+    out[#out + 1] = name
+  end
+
+  for _, name in ipairs(names) do
+    if not inventorySet[name] then
+      inventorySet[name] = true
+      if captureInventoryToActiveCategory(name) then
+        -- keep scanning all newly seen inventories so whole banks can appear in one refresh
+      end
+    end
+  end
+
+  allInventories = out
+end
+
 refreshInventories()
 refreshMonitors()
 
@@ -430,6 +450,7 @@ local state = {
 }
 
 local setMessage
+local captureInventoryToActiveCategory
 
 local function syncDashboardMonitors()
   local dashboards = { state.monitorName }
@@ -669,7 +690,7 @@ local function categoryForChest(chestName)
   return nil
 end
 
-local function captureInventoryToActiveCategory(name)
+captureInventoryToActiveCategory = function(name)
   if state.mode ~= "assign" or not state.activeCategoryKey then
     return false
   end
@@ -1168,7 +1189,9 @@ print("Newly detected inventories are added live to the selected category.")
 resetBaseline()
 
 while true do
+  scanForNewInventories()
   local buttons = render()
+  local timer = os.startTimer(0.5)
   local event, p1, p2, p3 = os.pullEvent()
 
   if event == "monitor_touch" then
@@ -1209,6 +1232,9 @@ while true do
   elseif event == "peripheral_detach" then
     refreshInventories()
     refreshMonitors()
+    break
+  elseif event == "timer" and p1 == timer then
+    scanForNewInventories()
     break
   elseif event == "key" and p1 == keys.q then
     monitor.setBackgroundColor(colors.black)
