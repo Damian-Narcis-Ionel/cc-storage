@@ -417,6 +417,8 @@ local state = {
   saved = false,
 }
 
+local setMessage
+
 local function syncDashboardMonitors()
   local dashboards = { state.monitorName }
   if type(state.dashboardMonitors[2]) == "string"
@@ -590,7 +592,7 @@ local function currentCandidate()
   return candidates[state.currentIndex], candidates
 end
 
-local function setMessage(text)
+setMessage = function(text)
   state.message = text
   term.setCursorPos(1, 1)
   term.clearLine()
