@@ -5,7 +5,7 @@ end
 
 local chests = {
   input = chest(79),
-  output = "minecraft:chest_output",
+  output = chest(80),
 }
 
 local monitors = {
@@ -30,8 +30,8 @@ local monitors = {
 }
 
 local requester = {
-  inventory_manager = "inventoryManager_0",
-  output_direction = "front",
+  inventory_manager = "inventory_manager_0",
+  output_direction = "left",
   rednet_protocol = "cc_storage_requester",
 }
 
